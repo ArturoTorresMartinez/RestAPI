@@ -19,7 +19,9 @@
   "homepage": "https://github.com/ArturoTorresMartinez/RestAPI#readme",
   "dependencies": {
     "body-parser": "^1.19.0",
-    "express": "^4.17.0"
+    "express": "^4.17.0",
+    "express-validator": "^5.3.1",
+    "mongoose": "^5.5.10"
   },
   "devDependencies": {
     "nodemon": "^1.19.0"
