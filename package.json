@@ -18,10 +18,12 @@
   },
   "homepage": "https://github.com/ArturoTorresMartinez/RestAPI#readme",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
     "express": "^4.17.0",
     "express-validator": "^5.3.1",
+    "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.5.10",
     "multer": "^1.4.1",
     "uuid": "^3.3.2"
