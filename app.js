@@ -6,6 +6,7 @@ const graphqlHttp = require("express-graphql");
 const graphqlSchema = require("./graphql/schema");
 const graphqlResolver = require("./graphql/resolver");
 const mongoose = require("mongoose");
+const auth = require('./middleware/auth');
 const app = express();
 const uuidv4 = require("uuid/v4");
 const cors = require("cors");
@@ -36,6 +37,9 @@ app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Contro-Allow-Methods", "GET, POST, PUT, PATCH, DELETE");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200)
+  }
   next();
 });
 app.use(bodyParser.json());
@@ -43,6 +47,7 @@ app.use(
   multer({ storage: fileStorage, fileFilter: fileFilter }).single("image")
 );
 app.use("/images", express.static(path.join(__dirname, "images")));
+app.use(auth);
 app.use(
   "/graphql",
   graphqlHttp({
@@ -56,7 +61,7 @@ app.use(
       const data = err.originalError.data;
       const message = err.message || "An error occured";
       const code = err.originalError.code || 500;
-      return { message: message, statis: code, data: data };
+      return { message: message, status: code, data: data };
     }
   })
 );
@@ -70,7 +75,7 @@ app.use((error, req, res, next) => {
 
 mongoose
   .connect(
-    "mongodb+srv://arthur:poq7283ipod@cluster0-e7jon.mongodb.net/messages?retryWrites=true"
+    "mongodb+srv://arthur:poq7283ipod@cluster0-e7jon.mongodb.net/messages?retryWrites=true", { useNewUrlParser: true }
   )
   .then(result => {
     app.listen(8080);
