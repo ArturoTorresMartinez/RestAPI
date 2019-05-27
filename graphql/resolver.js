@@ -1,5 +1,7 @@
 const bcrypt = require("bcryptjs");
 const User = require("../models/user");
+const path = require('path');
+const fs = require('fs');
 const Post = require('../models/post');
 const validator = require("validator");
 const jwt = require('jsonwebtoken');
@@ -131,5 +133,73 @@ module.exports = {
       createdAt: post.createdAt.toISOString(),
       updatedAt: post.updatedAt.toISOString()
     };
+  },
+  updatePost: async function ({ id, postInput }, req) {
+    if (!req.isAuth) {
+      const error = new Error('Not Authenticated');
+      error.code = 401;
+      throw error;
+    }
+    const post = await Post.findById(id).populate('creator');
+    if (!post) {
+      const error = new Error('No post found');
+      error.code = 404;
+      throw error
+    }
+    if (post.creator._id.toString() !== req.userId.toString()) {
+      const error = new Error('Not Authorized');
+      error.code = 403;
+      throw error;
+    }
+    const errors = [];
+    if (validator.isEmpty(postInput.title) || !validator.isLength(postInput.title, { min: 3 })) {
+      errors.push({ message: 'Title is invalid' });
+    }
+    if (validator.isEmpty(postInput.content) || !validator.isLength(postInput.content, { min: 5 })) {
+      errors.push({ message: 'Content is invalid' });
+    }
+    if (errors.length > 0) {
+      const error = new Error('Invalid Input');
+      error.data = errors;
+      error.code = 422;
+      throw error;
+    }
+    post.title = postInput.title;
+    post.content = postInput.content;
+    if (postInput.imageUrl !== 'undefined') {
+      post.imageUrl = postInput.imageUrl;
+    }
+    const updatedPost = await post.save();
+    return { ...updatedPost._doc, _id: updatedPost._id.toString(), createdAt: updatedPost.createdAt.toISOString(), updatedAt: updatedPost.updatedAt.toISOString() }
+  },
+  deletePost: async function ({ id }, req) {
+    if (!req.isAuth) {
+      const error = new Error('Not Authenticated');
+      error.code = 401;
+      throw error;
+    }
+    const post = await Post.findById(id);
+    if (!post) {
+      const error = new Error('No post found');
+      error.code = 404;
+      throw error
+    }
+    if (post.creator.toString() !== req.userId.toString()) {
+      const error = new Error('Not Authorized');
+      error.code = 403;
+      throw error;
+    }
+    clearImage(post.imageUrl);
+    await Post.findByIdAndRemove(id);
+    const user = await User.findById(req.userId);
+    user.posts.pull(id);
+    await user.save();
+    return true;
   }
 };
+
+const clearImage = filePath => {
+  filePath = path.join(__dirname, "..", filePath);
+  fs.unlink(filePath, err => console.log(err));
+};
+
