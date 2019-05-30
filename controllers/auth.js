@@ -61,6 +61,7 @@ exports.login = async (req, res, next) => {
     }
     next(err);
   }
+  return;
 };
 
 exports.getUserStatus = async (req, res, next) => {
